@@ -1,138 +1,229 @@
 import 'package:flutter/material.dart';
 
-void main() => runApp(
-      MaterialApp(
-        home: Home(),
-        debugShowCheckedModeBanner: false,
-      ),
-    );
+void main() => runApp(MyApp());
 
-class Home extends StatefulWidget {
+class MyApp extends StatelessWidget {
+  // This widget is the root of your application.
   @override
-  _HomeState createState() => _HomeState();
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Flutter Demo',
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
+      ),
+      home: MyHomePage(),
+      debugShowCheckedModeBanner: false
+    );
+  }
 }
 
-class _HomeState extends State<Home> {
-  GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+class MyHomePage extends StatefulWidget {
+  @override
+  _MyHomePageState createState() => _MyHomePageState();
+}
 
+class Pessoa {
+  TextEditingController peso;
+  TextEditingController altura;
+  String nome;
+  bool gender;
+  Color cor;
+  String resultNumber; 
+  String resultText; 
+  
+
+  calcularImc (){
+    double heigth = double.parse(altura.text) / 100.0;
+    double imc = double.parse(peso.text) / (heigth * heigth);
+    return imc;
+  }
+  
+  verificaTabelaImc( imc, gender ) {
+    this.resultNumber = "IMC = ${imc.toStringAsPrecision(2)}\n";
+    if (gender) {
+      if (imc <= 20.7) {
+        this.resultText = "Abaixo do peso";
+        cor = Colors.red[400].withOpacity(0.8);
+      }
+      else if (imc < 26.4) {
+        this.resultText = "Peso ideal";
+        cor = Colors.blue.withOpacity(0.8);
+      }
+      else if (imc < 27.8) {
+        this.resultText = "Pouco acima do peso";
+        cor = Colors.red[200].withOpacity(0.8);
+      }
+      else if (imc < 31.1) {
+        this.resultText = "Acima do peso";
+        cor = Colors.red[300].withOpacity(0.8);
+      }
+      else {
+        this.resultText = "Obesidade";
+        cor = Colors.red.withOpacity(0.8);
+      }
+    } else {
+      if (imc < 19.1) {
+        this.resultText = "Abaixo do peso";
+        cor = Colors.red[400].withOpacity(0.8);
+      }
+      else if (imc < 25.8) {
+        this.resultText = "Peso ideal";
+        cor = Colors.blue.withOpacity(0.8);
+      }
+      else if (imc < 27.3) {
+        this.resultText = "Pouco acima do peso";
+        cor = Colors.red[200].withOpacity(0.8);
+      }
+      else if (imc < 32.3) {
+        this.resultText = "Acima do peso";
+        cor = Colors.red[300].withOpacity(0.8);
+      }
+      else {
+        this.resultText = "Obesidade";
+        cor = Colors.red.withOpacity(0.8);
+      }
+    }
+  }
+  Pessoa(this.peso, this.altura, this.gender){
+    var imcLocal = calcularImc();
+    var _gender = this.gender;
+    verificaTabelaImc(imcLocal, _gender);
+  }
+}
+
+
+class _MyHomePageState extends State<MyHomePage> {
   TextEditingController _weightController = TextEditingController();
   TextEditingController _heightController = TextEditingController();
-  String _result;
+  GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  String _resultNumber = ''; 
+  String _resultText = '';
+  bool isSwitched = false;
+  Color colorText;
+  String textGender = 'Feminino';
 
-  @override
-  void initState() {
-    super.initState();
-    resetFields();
-  }
 
   void resetFields() {
     _weightController.text = '';
     _heightController.text = '';
     setState(() {
-      _result = 'Informe seus dados';
+      _resultText = 'Informe seus dados';
+    });
+  }
+
+  void calculateImc() {
+    Pessoa pessoa = Pessoa(_weightController, _heightController, isSwitched);
+    var imc = pessoa.calcularImc();
+
+  
+    setState(() {
+      pessoa.verificaTabelaImc(imc, isSwitched);
+      _resultNumber = pessoa.resultNumber;
+      _resultText = pessoa.resultText;
+      colorText = pessoa.cor;
     });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: buildAppBar(),
-        backgroundColor: Colors.white,
-        body: SingleChildScrollView(
-            padding: EdgeInsets.all(20.0), child: buildForm()));
-  }
-
-  AppBar buildAppBar() {
-    return AppBar(
-      title: Text('Calculadora de IMC'),
-      backgroundColor: Colors.blue,
-      actions: <Widget>[
-        IconButton(
-          icon: Icon(Icons.refresh),
-          onPressed: () {
-            resetFields();
-          },
-        )
-      ],
-    );
-  }
-
-  Form buildForm() {
-    return Form(
-      key: _formKey,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: <Widget>[
-          buildTextFormField(
-              label: "Peso (kg)",
-              error: "Insira seu peso!",
-              controller: _weightController),
-          buildTextFormField(
-              label: "Altura (cm)",
-              error: "Insira uma altura!",
-              controller: _heightController),
-          buildTextResult(),
-          buildCalculateButton(),
+      appBar: AppBar(
+        title: Text('Calculadora de IMC'),
+        backgroundColor: Colors.green,
+        actions: <Widget>[
+          IconButton(
+            icon: Icon(Icons.refresh),
+            onPressed: () {
+              resetFields();
+            },
+          )
         ],
       ),
-    );
-  }
-
-  void calculateImc() {
-    double weight = double.parse(_weightController.text);
-    double height = double.parse(_heightController.text) / 100.0;
-    double imc = weight / (height * height);
-
-    setState(() {
-      _result = "IMC = ${imc.toStringAsPrecision(2)}\n";
-      if (imc < 18.6)
-        _result += "Abaixo do peso";
-      else if (imc < 25.0)
-        _result += "Peso ideal";
-      else if (imc < 30.0)
-        _result += "Levemente acima do peso";
-      else if (imc < 35.0)
-        _result += "Obesidade Grau I";
-      else if (imc < 40.0)
-        _result += "Obesidade Grau II";
-      else
-        _result += "Obesidade Grau IIII";
-    });
-  }
-
-  Widget buildCalculateButton() {
-    return Padding(
-      padding: EdgeInsets.symmetric(vertical: 36.0),
-      child: RaisedButton(
-        onPressed: () {
-          if (_formKey.currentState.validate()) {
-            calculateImc();
-          }
-        },
-        child: Text('CALCULAR', style: TextStyle(color: Colors.white)),
-      ),
-    );
-  }
-
-  Widget buildTextResult() {
-    return Padding(
-      padding: EdgeInsets.symmetric(vertical: 36.0),
-      child: Text(
-        _result,
-        textAlign: TextAlign.center,
-      ),
-    );
-  }
-
-  Widget buildTextFormField(
-      {TextEditingController controller, String error, String label}) {
-    return TextFormField(
-      keyboardType: TextInputType.number,
-      decoration: InputDecoration(labelText: label),
-      controller: controller,
-      validator: (text) {
-        return text.isEmpty ? error : null;
-      },
+      body: SingleChildScrollView(
+        padding: EdgeInsets.all(20.0),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: <Widget>[
+              TextFormField(
+                keyboardType: TextInputType.number,
+                decoration: InputDecoration(labelText: 'Peso (kg)'),
+                controller: _weightController,
+                validator: (text) {
+                  return text.isEmpty ? "Insira seu peso!" : null;
+                },
+              ),
+              TextFormField(
+                keyboardType: TextInputType.number,
+                decoration: InputDecoration(labelText: 'Altura (cm)'),
+                controller: _heightController,
+                validator: (text) {
+                  return text.isEmpty ? "Insira sua altura!" : null;
+                },
+              ),
+              Padding(
+                padding: EdgeInsets.only(),
+                child: Container (
+                  child: Row(children: <Widget>[
+                    Checkbox(
+                    value: isSwitched,
+                    onChanged: (bool value) {
+                        setState(() {
+                            isSwitched = value;
+                            if (value) textGender = 'Masculino';
+                            else textGender = 'Feminino';
+                        });
+                      }
+                    ),
+                    Text(textGender),
+                  ],)
+                )
+              ),
+              Padding(
+                padding: EdgeInsets.only(top: 36.0),
+                child: Container (
+                  child: Column(children: <Widget>[
+                    Text(
+                      _resultNumber, 
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: colorText,
+                        fontSize: 50
+                      ),
+                    ),
+                    Text(
+                      _resultText,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: colorText,
+                        fontSize: 20
+                      ),
+                    )
+                  ],),
+                )
+              ),
+              Padding(
+                padding: EdgeInsets.symmetric(vertical: 36.0),
+                child: Container(
+                  height: 50,
+                  child: RaisedButton(
+                    color: Colors.green,
+                    onPressed: () {
+                      if (_formKey.currentState.validate()) {
+                        calculateImc();
+                      }
+                    },
+                    child: Text('CALCULAR', style: TextStyle(color: Colors.white)),
+                  )
+                )
+              ),
+            ]
+          )
+        )
+      )
     );
   }
 }
